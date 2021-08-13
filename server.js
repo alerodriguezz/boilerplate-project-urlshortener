@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const bodyParser = require("body-parser");
+const dns= require("dns")
 const cors = require('cors');
 const app = express();
 
@@ -16,11 +17,31 @@ app.use('/public', express.static(`${process.cwd()}/public`));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-app.use('/api/shorturl', (req, res, next)=>{
-   console.log('data: ', req.body.url);
-   //res.redirect('/');
-  res.json({ original_url: req.body.url });
+app.post('/api/shorturl', (req, res, next)=>{
+    const original_url= req.body.url
+    try{
+    const urlObject = new URL(original_url);
+       dns.lookup(urlObject.hostname, (err, address, family) => {  
+
+        if (err) {
+      res.json({error: "invalid URL"});
+    } else{
+          let shortened_url = Math.floor(Math.random()*100000).toString();
+            // console.log('data: ', req.body.url);
+          res.json({ original_url: original_url,
+          short_url: shortened_url });
+    }
+    });
+
+    }
+    catch (e){
+      res.json({error:"invalid url"});
+    }
+   
+
+   
 });
+
 
 app.get('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
