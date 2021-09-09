@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const dns= require("dns")
 const cors = require('cors');
 const mongoose = require("mongoose");
+const urlparser = require('url');
 const app = express();
 
 // Basic Configuration
@@ -25,10 +26,9 @@ app.use(bodyParser.json());
 app.post('/api/shorturl', (req, res, next)=>{
     const original_url= req.body.url
     try{
-    const urlObject = new URL(original_url);
-       dns.lookup(urlObject.hostname, (err, address, family) => {  
-            if (err) {
-      res.status(400).json({error: "invalid url"});
+       dns.lookup(urlparser.parse(original_url).hostname, (err, address, family) => {  
+            if (err || !address) {
+      res.json({error: "invalid url"});
     } else{
           let shortened_url = Math.floor(Math.random()*100000).toString();
             // console.log('data: ', req.body.url);
@@ -58,13 +58,21 @@ app.get('/', function(req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-/*
+
 // Your first API endpoint
 app.get('/api/shorturl/:shorturl', function(req, res) {
-   //let urlStr= req.params.shorturl
-  //res.redirect(301, req.body.url);
+   let shorturlStr= req.params.shorturl
+   Url.findById(shorturlStr,(err,data)=> {
+     if(!data){
+       res.json({error: "invalid url"})
+     }
+     else{
+         res.redirect(301, data.url);
+     }
+   })
+
 });
-*/
+
 
 // Your first API endpoint
 app.get('/api/hello', function(req, res) {
